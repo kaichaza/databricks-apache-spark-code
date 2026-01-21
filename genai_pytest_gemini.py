@@ -10,7 +10,7 @@ from pyspark.sql.functions import pandas_udf, col
 from pyspark.sql.types import StringType, BooleanType, StructType, StructField
 
 # --- CONFIGURATION ---
-os.environ["GOOGLE_API_KEY"] = "AIzaSyCsxfJZnY82VvK0AdH0FxTl2vHCoTlp2Jw" 
+os.environ["GOOGLE_API_KEY"] = "API_KEY_HERE" 
 
 # 2. Define the logic as a Pandas UDF
 # This function receives a BATCH of prompts (pandas Series) and returns a BATCH of answers.
