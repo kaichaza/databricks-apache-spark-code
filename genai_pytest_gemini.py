@@ -1,40 +1,42 @@
-# COMMAND ----------
-# 1. Install the SDK on all worker nodes (standard pip only installs on driver)
-%pip install -q -U google-generativeai
+%pip install -U google-genai typing_extensions
+dbutils.library.restartPython()
 
-# COMMAND ----------
-import google.generativeai as genai
 import pandas as pd
 import os
 from pyspark.sql.functions import pandas_udf, col
-from pyspark.sql.types import StringType, BooleanType, StructType, StructField
+from pyspark.sql.types import StringType
+from google import genai
 
-# --- CONFIGURATION ---
-os.environ["GOOGLE_API_KEY"] = "API_KEY_HERE" 
+if "GOOGLE_API_KEY" not in os.environ:
+    raise ValueError("CRITICAL ERROR: GOOGLE_API_KEY not found. Please set it in Compute -> Advanced Options -> Environment Variables.")
 
-# 2. Define the logic as a Pandas UDF
 # This function receives a BATCH of prompts (pandas Series) and returns a BATCH of answers.
 # Spark automatically distributes these batches to different workers.
 @pandas_udf(StringType())
 def ask_gemini_distributed(prompts: pd.Series) -> pd.Series:
-    # Initialize inside the function so every worker gets its own client
-    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-2.5-pro')
+    # Initialize the client inside the worker function
+    # It will automatically grab 'GOOGLE_API_KEY' from the worker's environment
+    client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
     
     results = []
     for prompt in prompts:
         try:
             # Helper text added to ensure one-word answers
             full_prompt = f"{prompt} Answer in one word."
-            response = model.generate_content(full_prompt)
+            
+            # Updated syntax for the new google-genai SDK
+            response = client.models.generate_content(
+                model='gemini-2.0-flash', 
+                contents=full_prompt
+            )
             results.append(response.text.strip().lower())
-        except Exception:
-            results.append("error")
+        except Exception as e:
+            # Return the actual error message for easier debugging
+            results.append(f"error: {str(e)}")
             
     return pd.Series(results)
 
-# 3. Create a Spark DataFrame (The "Big Data" part)
-# Imagine this list has 1,000 questions, not just 2.
+# Create a Spark DataFrame (The "Big Data" part)
 data = [
     ("test_01", "What colour is the sky?"), 
     ("test_02", "What is water called when it's frozen?"),
@@ -43,21 +45,21 @@ data = [
 schema = ["test_id", "question"]
 df_requests = spark.createDataFrame(data, schema)
 
-# 4. Run the distributed inference
+# Run the distributed inference
 # This line triggers the Spark Job.
 df_responses = df_requests.withColumn("gemini_answer", ask_gemini_distributed(col("question")))
 
-# 5. Run the Assertion (Distributed Test)
+# Run the Assertion (Distributed Test)
 df_final = df_responses.withColumn(
     "test_passed", 
-    # For this specific example, we just check if it returned a valid word
-    col("gemini_answer").isin("blue", "ice", "London")
+    # Checking against your specific expected answers
+    col("gemini_answer").isin("blue", "ice", "london")
 )
 
 # Display results
 df_final.display()
 
-# 6. Verify if ANY test failed
+# Verify if any test failed
 failed_count = df_final.filter(col("test_passed") == False).count()
 
 if failed_count == 0:

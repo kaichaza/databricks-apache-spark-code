@@ -77,7 +77,7 @@ SELECT * FROM in_memory_table_customers LIMIT 2;
 
 EXPLAIN SELECT * FROM in_memory_table_customers LIMIT 2;
 
---CACHE TABLE in_memory_table_customers;
+CACHE TABLE in_memory_table_customers;
 
 EXPLAIN SELECT * FROM in_memory_table_customers LIMIT 2;
 --------------------------------------------------------------
@@ -93,7 +93,7 @@ SELECT * FROM in_memory_table_products LIMIT 2;
 
 EXPLAIN SELECT * FROM in_memory_table_products LIMIT 2;
 
---CACHE TABLE in_memory_table_products;
+CACHE TABLE in_memory_table_products;
 
 EXPLAIN SELECT * FROM in_memory_table_products LIMIT 2;
 
@@ -118,7 +118,7 @@ SELECT
             10 AS shipping_cost_per_km
 FROM in_memory_table_customers;
 
---CACHE TABLE in_memory_table_orders;
+CACHE TABLE in_memory_table_orders;
 
 SELECT * FROM in_memory_table_orders LIMIT 2;
 --------------------------------------------------------------
@@ -146,7 +146,7 @@ INNER JOIN
 ON
     in_memory_table_orders.product_id = in_memory_table_products.product_id;
 
---CACHE TABLE in_memory_table_invoices;
+CACHE TABLE in_memory_table_invoices;
 
 SELECT * FROM in_memory_table_invoices LIMIT 2;
 
@@ -162,6 +162,8 @@ FROM
     in_memory_table_invoices;
 
 -------------------------------------------------------------
+DROP TABLE IF EXISTS on_disk_table_invoices_spark_sql;
+
 CREATE TABLE on_disk_table_invoices_spark_sql
 AS
 SELECT * FROM in_memory_table_invoices;

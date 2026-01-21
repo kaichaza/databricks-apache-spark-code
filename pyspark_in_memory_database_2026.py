@@ -35,7 +35,7 @@ array_temp1 = [[ 1, 'Apple iPhone 6', '16GB memory', 200.0 ],
 in_memory_products_dataframe = spark.createDataFrame( array_temp1, manual_schema_products)
 
 in_memory_products_dataframe.show(2)
-# in_memory_products_dataframe.cache()
+in_memory_products_dataframe.cache()
 
 # -----------------------------------------------------------------------------
 # Create customers dataframe
@@ -53,7 +53,7 @@ array_temp2 = [[ 1, 'Pete', 'North Road', 5.0, 10.0 ],
 in_memory_customers_dataframe = spark.createDataFrame( array_temp2, manual_schema_customers)
 
 in_memory_customers_dataframe.show(2)
-# in_memory_customers_dataframe.cache()
+in_memory_customers_dataframe.cache()
 
 # ----------Store permanent copies of the dataframes as tables on disk-------------
 # ----------However, this will only work if you first delete the on_disk_tables
@@ -102,8 +102,7 @@ df_orders_final = df_orders_temp3.withColumn('warehouse_x', lit(5)).\
                                 withColumn('warehouse_y', lit(4)).withColumn('shipping_cost_per_km', lit(10))
 
 df_orders_final.show(2)
-# in mem caching is no longer supported for free-tier serverless clusters 
-# df_orders_final.cache()
+df_orders_final.cache()
 # -------------------------------------------------
                                                 
 df_inner_joined = df_orders_final.join(in_memory_products_dataframe,
@@ -123,7 +122,7 @@ df_inner_joined = df_orders_final.join(in_memory_products_dataframe,
                                          'price')
 
 df_inner_joined.show(2)
-# df_inner_joined.cache()
+df_inner_joined.cache()
 
 # ---we need to rename the column here coz of per unit ambiguity ----
 
@@ -163,7 +162,7 @@ df_invoices_temp4.select('customer_name',
                          'shipping_costs').show(2)
 
 df_invoices_final = df_invoices_temp4
-# df_invoices_final.cache()
+df_invoices_final.cache()
 
 df_invoices_final.select('customer_id',
                          'customer_name',
